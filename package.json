@@ -1,0 +1,34 @@
+{
+  "name": "reelhome-backend",
+  "version": "1.0.0",
+  "description": "Backend for reelhome",
+  "main": "reelhome.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mugishap/reelhome-backend.git"
+  },
+  "author": "precieux33",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mugishap/reelhome-backend/issues"
+  },
+  "homepage": "https://github.com/mugishap/reelhome-backend#readme",
+  "dependencies": {
+    "body-parser": "^1.20.0",
+    "chalk": "^5.0.1",
+    "cloudinary": "^1.30.0",
+    "cookie-parser": "^1.4.6",
+    "dotenv": "^16.0.1",
+    "express": "^4.18.1",
+    "joi": "^17.6.0",
+    "jsonwebtoken": "^8.5.1",
+    "mongoose": "^6.4.4",
+    "nodemon": "^2.0.19",
+    "swagger-ui-express": "^4.4.0",
+    "swaggiffy": "^1.0.5",
+    "valdie": "^0.1.2"
+  }
+}
