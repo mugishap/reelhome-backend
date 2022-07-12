@@ -4,7 +4,8 @@
   "description": "Backend for reelhome",
   "main": "reelhome.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon reelhome.js"
   },
   "repository": {
     "type": "git",
@@ -22,6 +23,7 @@
     "chalk": "^5.0.1",
     "cloudinary": "^1.30.0",
     "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
     "dotenv": "^16.0.1",
     "express": "^4.18.1",
     "joi": "^17.6.0",

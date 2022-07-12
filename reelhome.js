@@ -3,7 +3,7 @@ const app = express();
 const PORT = process.env.PORT || 5050;
 const bodyParser = require('body-parser');
 const cors = require('cors');
-
+const {dbConnection} = require('./src/utils/mongo');
 
 app.use(cors())
 app.use(bodyParser.json({ limit: '5mb' }));

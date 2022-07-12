@@ -1,7 +1,7 @@
 const express = require('express')
 const { registerDefinition } = require('swaggiffy')
 const { newPost, deletePost, allPosts,unLikePost,getPostByPosterID, likePost, commentOnPost,getPostsByMostLikes, getCommentsByPosts, getCommentsByUser, getLikesDataByPosts, getPostsByMostComments, getLikesCountByPosts, updateCommentOnPost, updatePost, getPostsByFollowing, deleteComment, getAllPostData } = require('../controllers/post')
-const { checkForAccess } = require('./../middlewares/auth')
+const { checkForAccess } = require('../middlewares/auth')
 const postRouter = express.Router()
 
 postRouter.post("/newPost", checkForAccess, newPost)
