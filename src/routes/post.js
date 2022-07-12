@@ -1,0 +1,28 @@
+const express = require('express')
+const { registerDefinition } = require('swaggiffy')
+const { newPost, deletePost, allPosts,unLikePost,getPostByPosterID, likePost, commentOnPost,getPostsByMostLikes, getCommentsByPosts, getCommentsByUser, getLikesDataByPosts, getPostsByMostComments, getLikesCountByPosts, updateCommentOnPost, updatePost, getPostsByFollowing, deleteComment, getAllPostData } = require('../controllers/post')
+const { checkForAccess } = require('./../middlewares/auth')
+const postRouter = express.Router()
+
+postRouter.post("/newPost", checkForAccess, newPost)
+postRouter.delete("/delete/:postID", checkForAccess, deletePost)
+postRouter.get("/allPosts", checkForAccess, allPosts)
+postRouter.get("/like/:postID", checkForAccess, likePost)
+postRouter.post('/commentOnPost', checkForAccess, commentOnPost)
+postRouter.get('/getCommentsByUser/:userID', checkForAccess, getCommentsByUser)
+postRouter.get('/getCommentsByPosts/:postID', checkForAccess, getCommentsByPosts)
+postRouter.get('/getLikeCountByPost/:postID',checkForAccess,getLikesCountByPosts)
+postRouter.get('/getLikesDataByPost/:postID',checkForAccess,getLikesDataByPosts)
+postRouter.get('/getPostsByMostComments',checkForAccess,getPostsByMostComments)
+postRouter.get('/getPostsByMostLikes',checkForAccess,getPostsByMostLikes)
+postRouter.get('/unLikePost/:postID',checkForAccess,unLikePost)
+postRouter.get('/getPostByPosterID/:posterID',checkForAccess,getPostByPosterID)
+postRouter.put('/updateCommentOnPost/:postID',checkForAccess,updateCommentOnPost)
+postRouter.patch('/updatePost/:postID',checkForAccess,updatePost)
+postRouter.get('/getPostsByFollowing',checkForAccess,getPostsByFollowing)
+postRouter.get('/getAllPostData/:postID',checkForAccess,getAllPostData)
+postRouter.delete('/deleteComment/:postID', checkForAccess, deleteComment)
+
+registerDefinition(postRouter, { tags: 'Posts', mappedSchema: 'Post', basePath: '/post' })
+
+module.exports = postRouter
