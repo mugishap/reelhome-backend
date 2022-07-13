@@ -1,13 +1,12 @@
-const userSchema = require('../models/user')
-const postSchema = require('../models/posts')
-const commentSchema = require('../models/comments')
-const likeSchema = require('../models/likes')
-const followSchema = require('../models/follows')
+const { userSchema } = require("../models/user")
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
+const { followSchema } = require("../models/follows")
+const { isEmail, isURL, isAlphaNum, isAlpha } = require("valdie")
+const { isString, isInteger } = require("lodash")
 const cloudinary = require('cloudinary').v2
-require('dotenv').config()
 
+require('dotenv').config()
 
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_NAME,
@@ -15,14 +14,13 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_SECRET
 })
 
-
 exports.registerUser = async (req, res) => {
     try {
         const { fullname, username, email, password } = req.body
 
         //Validations for the user using valdie
         if (!isString(fullname) || fullname < 5 || fullname > 100) return res.status(400).json({ message: "Fullname must be a string, less than 100 and greater than 5" })
-        if (!isAlphaNum(username)||username < 3 || username > 10) return res.status(400).json({ message: "Username must be a string, less than 50 and greater than 4" })
+        if (!isAlphaNum(username) || username < 3 || username > 10) return res.status(400).json({ message: "Username must be a string, less than 50 and greater than 4" })
         if (!isEmail(email) || email < 6 || email > 50) return res.status(400).json({ message: "Email must be a valid email, less than 50 and greater than 6" })
         if (password < 4 || password > 16) return res.status(400).json({ message: "Password must be a string, greater than 4,and less than 16 characters" })
 
@@ -31,8 +29,6 @@ exports.registerUser = async (req, res) => {
 
         if (anotherUsername != null) return res.status(400).json({ message: "User with that username already exists" })
         if (anotherEmail != null) return res.status(400).json({ message: "User with that email already exists" })
-
-
 
         const hashedPassword = await bcrypt.hash(password, parseInt(process.env.SALT_ROUNDS))
         const user = new userSchema({
@@ -211,9 +207,11 @@ exports.followUser = async (req, res) => {
             user,
         })
         await newfollower.save()
-        verifyFollower.followers = verifyFollower.followers + 1
+
+        verifyFollower.following = verifyFollower.following + 1
         await verifyFollower.save()
-        verifyUser.following = verifyUser.following + 1
+
+        verifyUser.followers = verifyUser.followers + 1
         await verifyUser.save()
         return res.status(200).json({ message: "You are now following this user" })
     } catch (error) {
@@ -282,7 +280,7 @@ exports.updatePassword = async (req, res) => {
 exports.updateProfilePicture = async (req, res) => {
     try {
         const { imageStr } = req.body
-        const user = await userSchema.findOne({ username: req.user.userid })
+        const user = await userSchema.findById(req.user.userid)
         if (!user || user === null) return res.status(400).json({ message: "You are not logged in" })
         const uploadedReponse = await cloudinary.uploader.upload(imageStr, {
             upload_preset: "photocorner"
@@ -299,7 +297,7 @@ exports.updateProfilePicture = async (req, res) => {
 exports.updateCoverPicture = async (req, res) => {
     try {
         const { imageStr } = req.body
-        const user = await userSchema.findById(req.userid)
+        const user = await userSchema.findById(req.user.userid)
         if (!user || user === null) return res.status(400).json({ message: "You are not logged in" })
         const uploadedReponse = await cloudinary.uploader.upload(imageStr, {
             upload_preset: "photocorner"
@@ -332,7 +330,7 @@ exports.updateBiography = async (req, res) => {
 
 exports.userSuggestions = async (req, res) => {
     try {
-        const userid  = req.user.userid
+        const userid = req.user.userid
         const user = await userSchema.findById(userid)
         if (!user || user === null) return res.status(400).json({ message: "You are not logged in" })
         const following = await followSchema.find({ follower: userid })
@@ -350,6 +348,32 @@ exports.userSuggestions = async (req, res) => {
             return array;
         }
         const users = shuffle(suggestions)
+        return res.status(200).json({ users })
+    } catch (error) {
+        console.log(error);
+        return res.status(400).json({ message: "Error in getting user suggestions" })
+    }
+}
+exports.getFollowingData = async (req, res) => {
+    try {
+        const userid = req.user.userid
+        const user = await userSchema.findById(userid)
+        if (!user || user === null) return res.status(400).json({ message: "You are not logged in" })
+        const following = await followSchema.find({ follower: userid })
+        const users = await userSchema.find({ _id: { $in: following } })
+        return res.status(200).json({ users })
+    } catch (error) {
+        console.log(error);
+        return res.status(400).json({ message: "Error in getting user suggestions" })
+    }
+}
+exports.getFollowersData = async (req, res) => {
+    try {
+        const userid = req.user.userid
+        const user = await userSchema.findById(userid)
+        if (!user || user === null) return res.status(400).json({ message: "You are not logged in" })
+        const followers = await followSchema.find({ user: userid })
+        const users = await userSchema.find({ _id: { $in: followers } })
         return res.status(200).json({ users })
     } catch (error) {
         console.log(error);
