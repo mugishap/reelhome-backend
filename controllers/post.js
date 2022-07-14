@@ -12,15 +12,15 @@ cloudinary.config({
 
 exports.newPost = async (req, res) => {
     try {
-        const { imageStr, caption } = req.body
+        const { videoStr, caption } = req.body
         user = req.user.userid
-        const uploadedResponse = await cloudinary.uploader.upload(imageStr, {
-            upload_preset: 'photocorner'
+        const uploadedResponse = await cloudinary.uploader.upload(videoStr, {
+            upload_preset: 'reelhome'
         })
-        const image_url = uploadedResponse.secure_url
+        const video_url = uploadedResponse.secure_url
         const post = new postSchema({
             user,
-            image_url,
+            video_url,
             caption,
         })
         await post.save()
@@ -39,10 +39,10 @@ exports.allPosts = async (req, res) => {
 }
 exports.deletePost = async (req, res) => {
     const { postID } = req.params
-    const { image_url } = await postSchema.findById(postID)
+    const { video_url } = await postSchema.findById(postID)
     const post = await postSchema.findByIdAndDelete(postID)
     if (!post || post === null) return res.status(400).json({ message: "Post not found" })
-    await cloudinary.uploader.destroy(image_url.split('/').pop())
+    await cloudinary.uploader.destroy(video_url.split('/').pop())
     await likeSchema.deleteMany({ post: postID })
     await commentSchema.deleteMany({ post: postID })
     const likedata = await likeSchema.find({ post: postID })
@@ -150,21 +150,21 @@ exports.updateCommentOnPost = async (req, res) => {
 }
 exports.updatePost = async (req, res) => {
     const { postID } = req.params
-    const { caption, imageStr } = req.body
+    const { caption, videoStr } = req.body
     const user = req.user.userid
     const post = await postSchema.findById(postID)
     if (!post || post === null) return res.status(400).json({ message: "Post not found" })
     if (user != post.user) return res.status(400).json({ message: "You are not authorized to update this post" })
 
-    let image_url = null
-    if (imageStr) {
-        const uploadedResponse = await cloudinary.v2.uploader.upload(imageStr, {
-            upload_preset: 'photocorner',
+    let video_url = null
+    if (videoStr) {
+        const uploadedResponse = await cloudinary.v2.uploader.upload(videoStr, {
+            upload_preset: 'reelhome',
         })
-        image_url = uploadedResponse.secure_url
+        video_url = uploadedResponse.secure_url
     }
 
-    await postSchema.findByIdAndUpdate(postID, { caption, image_url })
+    await postSchema.findByIdAndUpdate(postID, { caption, video_url })
     const posts = await postSchema.find()
     return res.status(200).json({ message: "Post updated succesfully", posts })
 }

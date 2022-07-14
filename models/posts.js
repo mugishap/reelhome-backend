@@ -8,7 +8,7 @@ const postSchema = new mongoose.Schema({
     user: {
         type: String
     },
-    image_url: {
+    video_url: {
         type: String
     },
     likes: {
@@ -31,7 +31,7 @@ const postSchema = new mongoose.Schema({
     }
 })
 
-// registerSchema('Post', postSchema, { orm: 'mongoose' })
+registerSchema('Post', postSchema, { orm: 'mongoose' })
 
 
 module.exports.postSchema = mongoose.model("posts", postSchema)

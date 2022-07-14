@@ -14,7 +14,7 @@ app.use(bodyParser.urlencoded({ limit: '5mb', extended: true }));
 app.use(express.urlencoded({ extended: true }))
 
 app.listen(PORT, () => {
-    console.log(`[LOG] SERVER UP ON PORT %c ${PORT}`, 'color: green; font-size: 20px;');
+    console.log(`%c[LOG] SERVER UP ON PORT ${PORT}`, 'color: green; font-size: 20px;');
 })
 
 dbConnection()
@@ -25,5 +25,5 @@ app.use("/post", require('./routes/posts'))
 
 
 
-const { Swaggiffy } = require('swaggiffy')
-new Swaggiffy().setupExpress(app).swaggiffy();
+// const { Swaggiffy } = require('swaggiffy')
+// new Swaggiffy().setupExpress(app).swaggiffy();

@@ -279,11 +279,11 @@ exports.updatePassword = async (req, res) => {
 
 exports.updateProfilePicture = async (req, res) => {
     try {
-        const { imageStr } = req.body
+        const { videoStr } = req.body
         const user = await userSchema.findById(req.user.userid)
         if (!user || user === null) return res.status(400).json({ message: "You are not logged in" })
-        const uploadedReponse = await cloudinary.uploader.upload(imageStr, {
-            upload_preset: "photocorner"
+        const uploadedReponse = await cloudinary.uploader.upload(videoStr, {
+            upload_preset: "reelhome"
         })
         user.profile = uploadedReponse.secure_url
         await user.save()
@@ -296,11 +296,11 @@ exports.updateProfilePicture = async (req, res) => {
 
 exports.updateCoverPicture = async (req, res) => {
     try {
-        const { imageStr } = req.body
+        const { videoStr } = req.body
         const user = await userSchema.findById(req.user.userid)
         if (!user || user === null) return res.status(400).json({ message: "You are not logged in" })
-        const uploadedReponse = await cloudinary.uploader.upload(imageStr, {
-            upload_preset: "photocorner"
+        const uploadedReponse = await cloudinary.uploader.upload(videoStr, {
+            upload_preset: "reelhome"
         })
         user.cover = uploadedReponse.secure_url
         await user.save()
