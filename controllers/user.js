@@ -5,6 +5,7 @@ const { followSchema } = require("../models/follows")
 const { isEmail, isURL, isAlphaNum, isAlpha } = require("valdie")
 const { isString, isInteger } = require("lodash")
 const cloudinary = require('cloudinary').v2
+const { signupSchema, loginSchema, updateUserSchema, updatePasswordSchema } = require("./../utils/validate")
 
 require('dotenv').config()
 
@@ -18,11 +19,9 @@ exports.registerUser = async (req, res) => {
     try {
         const { fullname, username, email, password } = req.body
 
-        //Validations for the user using valdie
-        if (!isString(fullname) || fullname < 5 || fullname > 100) return res.status(400).json({ message: "Fullname must be a string, less than 100 and greater than 5" })
-        if (!isAlphaNum(username) || username < 3 || username > 10) return res.status(400).json({ message: "Username must be a string, less than 50 and greater than 4" })
-        if (!isEmail(email) || email < 6 || email > 50) return res.status(400).json({ message: "Email must be a valid email, less than 50 and greater than 6" })
-        if (password < 4 || password > 16) return res.status(400).json({ message: "Password must be a string, greater than 4,and less than 16 characters" })
+        const { error, value } = signupSchema.validate(req.body)
+
+        if (error) return res.status(400).json({ message: error.message })
 
         const anotherUsername = await userSchema.findOne({ username })
         const anotherEmail = await userSchema.findOne({ email })
@@ -102,8 +101,13 @@ exports.login = async (req, res) => {
     try {
         const { email, password } = req.body
 
+        const { error, value } = loginSchema.validate(req.body)
+
+        if (error) return res.status(400).json({ message: error.message })
+
+
         if (!isEmail(email)) return res.status(400).json({ message: "Email must be a valid email, less than 50 and greater than 6" })
-        if (!isString(password) || password < 4 || password > 16) return res.status(400).json({ message: "Password must be a string, greater than 4,and less than 16 characters" })
+        if (password < 4 || password > 16) return res.status(400).json({ message: "Password must be a string, greater than 4,and less than 16 characters" })
 
         const user = await userSchema.findOne({ email })
         if (!user || user === null) return res.status(400).json({ message: "User not found" })
@@ -128,6 +132,10 @@ exports.updateUser = async (req, res) => {
     try {
 
         const { fullname, username, email } = req.body
+
+        const {error,value} = updateUserSchema.validate(req.body)
+
+        if(error) return res.status(400).json({message:error.message})
 
         if (!isString(fullname)) return res.status(400).json({ message: "Fullname must be a string" })
         if (!isString(username)) return res.status(400).json({ message: "Username must be a string" })
@@ -251,6 +259,11 @@ exports.updatePassword = async (req, res) => {
     try {
         const { password, newPassword } = req.body
 
+        const {error,value} = updatePasswordSchema.validate(req.body)
+
+        if(error) return res.status(400).json({message:error.message})
+
+
         if (password === newPassword) return res.status(400).json({ message: "New password must be different from old password" })
 
         if (!isString(password) || password < 4 || password > 16) return res.status(400).json({ message: "Password must be a string, greater than 4,and less than 16 characters" })
@@ -279,10 +292,15 @@ exports.updatePassword = async (req, res) => {
 
 exports.updateProfilePicture = async (req, res) => {
     try {
-        const { videoStr } = req.body
+        const { imageStr } = req.body
+
+        const {error,value} = this.updateProfilePicture.validate(req.body)
+
+        if(error) return res.status(400).json({message:error.message})
+
         const user = await userSchema.findById(req.user.userid)
         if (!user || user === null) return res.status(400).json({ message: "You are not logged in" })
-        const uploadedReponse = await cloudinary.uploader.upload(videoStr, {
+        const uploadedReponse = await cloudinary.uploader.upload(imageStr, {
             upload_preset: "reelhome"
         })
         user.profile = uploadedReponse.secure_url
@@ -296,10 +314,14 @@ exports.updateProfilePicture = async (req, res) => {
 
 exports.updateCoverPicture = async (req, res) => {
     try {
-        const { videoStr } = req.body
+        const { imageStr } = req.body
+        const {error,value} = updateProfilePicture.validate(req.body)
+
+        if(error) return res.status(400).json({message:error.message})
+
         const user = await userSchema.findById(req.user.userid)
         if (!user || user === null) return res.status(400).json({ message: "You are not logged in" })
-        const uploadedReponse = await cloudinary.uploader.upload(videoStr, {
+        const uploadedReponse = await cloudinary.uploader.upload(imageStr, {
             upload_preset: "reelhome"
         })
         user.cover = uploadedReponse.secure_url
@@ -314,6 +336,11 @@ exports.updateCoverPicture = async (req, res) => {
 exports.updateBiography = async (req, res) => {
     try {
         const { biography } = req.body
+
+        const {error,value} = this.updateBiography.validate(req.body)
+
+        if(error) return res.status(400).json({message:error.message})
+
         if (!biography) return res.status(400).json({ message: "Biography cannot be empty" })
         if (biography.length > 300) return res.status(400).json({ message: "Biography is too long" })
         if (!isString(biography)) { return res.status(400).json({ message: "Biography is not a string" }) }
