@@ -8,8 +8,8 @@ const userSchema = new mongoose.Schema({
     },
     username: {
         type: String,
-        maxlength: 50,
-        minlength: 4,
+        maxlength: 16,
+        minlength: 3,
         unique: true
     },
     profile: {

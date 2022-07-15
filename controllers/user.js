@@ -105,10 +105,6 @@ exports.login = async (req, res) => {
 
         if (error) return res.status(400).json({ message: error.message })
 
-
-        if (!isEmail(email)) return res.status(400).json({ message: "Email must be a valid email, less than 50 and greater than 6" })
-        if (password < 4 || password > 16) return res.status(400).json({ message: "Password must be a string, greater than 4,and less than 16 characters" })
-
         const user = await userSchema.findOne({ email })
         if (!user || user === null) return res.status(400).json({ message: "User not found" })
         const comparison = await bcrypt.compareSync(password, user.password, (err, res) => {
@@ -136,10 +132,6 @@ exports.updateUser = async (req, res) => {
         const {error,value} = updateUserSchema.validate(req.body)
 
         if(error) return res.status(400).json({message:error.message})
-
-        if (!isString(fullname)) return res.status(400).json({ message: "Fullname must be a string" })
-        if (!isString(username)) return res.status(400).json({ message: "Username must be a string" })
-        if (!isEmail(email)) return res.status(400).json({ message: "Email must be a valid email" })
 
         const user = await userSchema.findOne({ _id: req.user.userid })
         console.log(req.user.userid);
