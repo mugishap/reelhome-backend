@@ -24,5 +24,5 @@ app.use("/user", require("./routes/user"))
 app.use("/post", require('./routes/posts'))
 
 
-// const { Swaggiffy } = require('swaggiffy')
-// new Swaggiffy().setupExpress(app).swaggiffy();
+const { Swaggiffy } = require('swaggiffy')
+new Swaggiffy().setupExpress(app).swaggiffy();

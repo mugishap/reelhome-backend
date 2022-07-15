@@ -13,6 +13,6 @@ const hashtagRouter = express.Router()
 hashtagRouter.post('/newHashtag', checkForAccess,newHashtag)
 hashtagRouter.get('/getAllHashtags', checkForAccess,getAllHashtags)
 
-registerDefinition(hashtagRouter, { tags: 'Hashtags', mappedSchema: 'Hashtag', basePath: '/hashtag' })
+// registerDefinition(hashtagRouter, { tags: 'Hashtags', mappedSchema: 'Hashtag', basePath: '/hashtag' })
 
 module.exports = hashtagRouter
