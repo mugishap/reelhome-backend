@@ -129,9 +129,9 @@ exports.updateUser = async (req, res) => {
 
         const { fullname, username, email } = req.body
 
-        const {error,value} = updateUserSchema.validate(req.body)
+        const { error, value } = updateUserSchema.validate(req.body)
 
-        if(error) return res.status(400).json({message:error.message})
+        if (error) return res.status(400).json({ message: error.message })
 
         const user = await userSchema.findOne({ _id: req.user.userid })
         console.log(req.user.userid);
@@ -168,6 +168,51 @@ exports.deleteUser = async (req, res) => {
         const isMatch = await bcrypt.compareSync(req.body.password, user.password)
 
         if (!isMatch) return res.status(400).json({ message: "Wrong password" })
+
+        const following = await followSchema.find({ follower: user._id })
+        const followers = await followSchema.find({ user: user._id })
+        if (following) {
+            following.forEach(async (follow) => {
+                await followSchema.findByIdAndDelete(follow._id)
+                const followed = await userSchema.findById(follow.user)
+                followed.followers -= 1
+                await followed.save()
+
+            }
+            )
+        }
+        if (followers) {
+            followers.forEach(async (follow) => {
+                await followSchema.findByIdAndDelete(follow._id)
+                const follower = await userSchema.findById(follow.follower)
+                follower.following -= 1
+                await follower.save()
+            }
+            )
+        }
+
+        const posts = await postSchema.find({ user: user._id })
+        if (posts) {
+            posts.forEach(async (post) => {
+                await postSchema.findByIdAndDelete(post._id)
+            }
+            )
+        }
+
+        const comments = await commentSchema.find({ user: user._id })
+        if (comments) {
+            comments.forEach(async (comment) => {
+                await commentSchema.findByIdAndDelete(comment._id)
+            }
+            )
+        }
+        const likes = await likeSchema.find({ user: user._id })
+        if (likes) {
+            likes.forEach(async (like) => {
+                await likeSchema.findByIdAndDelete(like._id)
+            }
+            )
+        }
 
         await userSchema.findByIdAndDelete(user._id)
 
@@ -251,9 +296,9 @@ exports.updatePassword = async (req, res) => {
     try {
         const { password, newPassword } = req.body
 
-        const {error,value} = updatePasswordSchema.validate(req.body)
+        const { error, value } = updatePasswordSchema.validate(req.body)
 
-        if(error) return res.status(400).json({message:error.message})
+        if (error) return res.status(400).json({ message: error.message })
 
 
         if (password === newPassword) return res.status(400).json({ message: "New password must be different from old password" })
@@ -286,9 +331,9 @@ exports.updateProfilePicture = async (req, res) => {
     try {
         const { imageStr } = req.body
 
-        const {error,value} = this.updateProfilePicture.validate(req.body)
+        const { error, value } = this.updateProfilePicture.validate(req.body)
 
-        if(error) return res.status(400).json({message:error.message})
+        if (error) return res.status(400).json({ message: error.message })
 
         const user = await userSchema.findById(req.user.userid)
         if (!user || user === null) return res.status(400).json({ message: "You are not logged in" })
@@ -307,9 +352,9 @@ exports.updateProfilePicture = async (req, res) => {
 exports.updateCoverPicture = async (req, res) => {
     try {
         const { imageStr } = req.body
-        const {error,value} = updateProfilePicture.validate(req.body)
+        const { error, value } = updateProfilePicture.validate(req.body)
 
-        if(error) return res.status(400).json({message:error.message})
+        if (error) return res.status(400).json({ message: error.message })
 
         const user = await userSchema.findById(req.user.userid)
         if (!user || user === null) return res.status(400).json({ message: "You are not logged in" })
@@ -329,9 +374,9 @@ exports.updateBiography = async (req, res) => {
     try {
         const { biography } = req.body
 
-        const {error,value} = this.updateBiography.validate(req.body)
+        const { error, value } = this.updateBiography.validate(req.body)
 
-        if(error) return res.status(400).json({message:error.message})
+        if (error) return res.status(400).json({ message: error.message })
 
         if (!biography) return res.status(400).json({ message: "Biography cannot be empty" })
         if (biography.length > 300) return res.status(400).json({ message: "Biography is too long" })
