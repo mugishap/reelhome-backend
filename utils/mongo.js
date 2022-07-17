@@ -2,8 +2,8 @@ const mongoose = require('mongoose')
 const dotenv = require('dotenv')
 dotenv.config()
 
-// const URL = process.env.ONLINE_URL
-const URL = process.env.OFFLINE_URL
+const URL = process.env.ONLINE_URL
+// const URL = process.env.OFFLINE_URL
 
 const dbConnection = async () => {
     try {
