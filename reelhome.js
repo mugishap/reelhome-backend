@@ -5,7 +5,9 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const {dbConnection} = require('./utils/mongo');
 
-app.use(cors())
+const frontendURL = 'http://localhost:3000/'
+// const frontendURL = 'https://reelhome.vercel.app/
+app.use(cors({origin:`${frontendURL}`}));
 app.use(bodyParser.json({ limit: '5mb' }));
 app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ limit: '5mb', extended: true }));
