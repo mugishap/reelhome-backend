@@ -275,6 +275,7 @@ exports.followUser = async (req, res) => {
             await verifyUser.save()
             return res.status(200).json({ message: "You are no longer following this user" })
         }
+        if(!status) return res.status(400).json({message:"Error, try again later!!"})
     } catch (error) {
         console.log('error', error);
         return res.status(400).json({ message: "Error in following user" })
