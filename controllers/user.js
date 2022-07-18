@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken')
 const { followSchema } = require("../models/follows")
 const { isString, isInteger } = require("lodash")
 const cloudinary = require('cloudinary').v2
-const { signupSchema, updateAllSchema,loginSchema, updateUserSchema, updatePasswordSchema } = require("./../utils/validate")
+const { signupSchema, updateAllSchema, loginSchema, updateUserSchema, updatePasswordSchema } = require("./../utils/validate")
 
 require('dotenv').config()
 
@@ -236,28 +236,45 @@ exports.allUsers = async (req, res) => {
 
 exports.followUser = async (req, res) => {
     try {
-        const { follower, user } = req.body
+        const { user, status } = req.body
+        const follower = req.user.userid
+        if (status.toLowerCase() === 'follow') {
+            const verifyUser = await userSchema.findOne({ _id: user })
+            const verifyFollower = await userSchema.findOne({ _id: follower })
 
-        const verifyUser = await userSchema.findOne({ _id: user })
-        const verifyFollower = await userSchema.findOne({ _id: follower })
+            if (!verifyUser === null) return res.status(400).json({ message: "User to be followed not found" })
+            if (!verifyFollower === null) return res.status(400).json({ message: "User to follow not found" })
 
-        if (!verifyUser === null) return res.status(400).json({ message: "User to be followed not found" })
-        if (!verifyFollower === null) return res.status(400).json({ message: "User to follow not found" })
+            const newfollower = new followSchema({
+                follower,
+                user,
+            })
+            await newfollower.save()
 
-        const verifyIfFollowing = await followSchema.findOne({ follower, user })
-        if (verifyIfFollowing) return res.status(400).json({ message: "You are already following this user" })
-        const newfollower = new followSchema({
-            follower,
-            user,
-        })
-        await newfollower.save()
+            verifyFollower.following = verifyFollower.following + 1
+            await verifyFollower.save()
 
-        verifyFollower.following = verifyFollower.following + 1
-        await verifyFollower.save()
+            verifyUser.followers = verifyUser.followers + 1
+            await verifyUser.save()
+            return res.status(200).json({ message: "You are now following this user" })
+        } else if (status.toLowerCase() === 'unfollow') {
+            const verifyUser = await userSchema.findOne({ _id: user })
+            const verifyFollower = await userSchema.findOne({ _id: follower })
 
-        verifyUser.followers = verifyUser.followers + 1
-        await verifyUser.save()
-        return res.status(200).json({ message: "You are now following this user" })
+            if (!verifyUser === null) return res.status(400).json({ message: "User to be unfollowed not found" })
+            if (!verifyFollower === null) return res.status(400).json({ message: "User to unfollow not found" })
+
+            const verifyIfFollowing = await followSchema.findOne({ follower, user })
+            if (!verifyIfFollowing) return res.status(400).json({ message: "You are not following this user" })
+            await followSchema.findByIdAndDelete(verifyIfFollowing._id)
+
+            verifyFollower.following = verifyFollower.following - 1
+            await verifyFollower.save()
+
+            verifyUser.followers = verifyUser.followers - 1
+            await verifyUser.save()
+            return res.status(200).json({ message: "You are no longer following this user" })
+        }
     } catch (error) {
         console.log('error', error);
         return res.status(400).json({ message: "Error in following user" })
@@ -266,30 +283,6 @@ exports.followUser = async (req, res) => {
 
 }
 
-exports.unfollowUser = async (req, res) => {
-    try {
-        const { follower, user } = req.body
-
-        const verifyUser = await userSchema.findOne({ _id: user })
-        const verifyFollower = await userSchema.findOne({ _id: follower })
-
-        if (!verifyUser === null) return res.status(400).json({ message: "User to be followed not found" })
-        if (!verifyFollower === null) return res.status(400).json({ message: "User to follow not found" })
-
-        const verifyIfFollowing = await followSchema.findOne({ follower, user })
-        if (!verifyIfFollowing) return res.status(400).json({ message: "You are not following this user" })
-
-        await followSchema.findByIdAndDelete(verifyIfFollowing._id)
-        verifyFollower.followers = verifyFollower.followers - 1
-        await verifyFollower.save()
-        verifyUser.following = verifyUser.following - 1
-        await verifyUser.save()
-        return res.status(200).json({ message: "You are no longer following this user" })
-    } catch (error) {
-        console.log('error', error);
-        return res.status(400).json({ message: "Error in unfollowing user" })
-    }
-}
 
 exports.updatePassword = async (req, res) => {
     try {
@@ -392,35 +385,41 @@ exports.updateBiography = async (req, res) => {
 }
 
 
-exports.updateAllProfile = async(req,res)=>{
-    const {cover,profile,fullname,username,email} = req.body
-    const {error,value} =updateAllSchema.validate(req.body)
-    if(error) return res.status(400).json({message:error.message})
-    const user = req.user.userid
-    const userData = await postSchema.findOne({user})
-    if(!userData) return res.status(400).json({message:"User not found"})
-    const coverUploadResponse = await cloudinary.uploader.upload(cover,{
-        resource_type:'image',
-        upload_preset:'reelhome'
-    })
-    const coverURL = coverUploadResponse.secure_url
-    const profileUploadResponse = await cloudinary.uploader.upload(profile,{
-        resource_type:'image',
-        upload_preset:'reelhome'
-    })
-    const profileURL = profileUploadResponse.secure_url
+exports.updateAllProfile = async (req, res) => {
+    try {
+        const { cover, profile, fullname, username, email } = req.body
+        const { error, value } = updateAllSchema.validate(req.body)
+        if (error) return res.status(400).json({ message: error.message })
+        const user = req.user.userid
+        const userData = await userSchema.findOne({ user })
+        if (!userData) return res.status(400).json({ message: "User not found" })
+        const coverUploadResponse = await cloudinary.uploader.upload(cover, {
+            resource_type: 'image',
+            upload_preset: 'reelhome'
+        })
+        const coverURL = coverUploadResponse.secure_url
+        const profileUploadResponse = await cloudinary.uploader.upload(profile, {
+            resource_type: 'image',
+            upload_preset: 'reelhome'
+        })
+        const profileURL = profileUploadResponse.secure_url
 
-    await cloudinary.uploader.destroy(userData.cover.split('/').pop())
-    await cloudinary.uploader.destroy(userData.profile.split('/').pop())
+        await cloudinary.uploader.destroy(userData.cover.split('/').pop())
+        await cloudinary.uploader.destroy(userData.profile.split('/').pop())
 
-    await postSchema.findByIdAndUpdate(user,{
-        cover:coverURL,
-        profile:profileURL,
-        fullname,
-        username,
-        email
-    })
-    return res.status(200).json({message:"Profile updated successfully"})
+        await userSchema.findByIdAndUpdate(user, {
+            cover: coverURL,
+            profile: profileURL,
+            fullname,
+            username,
+            email
+        })
+        return res.status(200).json({ message: "Profile updated successfully" })
+    }
+    catch (error) {
+        console.log(error)
+        return res.status(500).json({ message: error.message })
+    }
 }
 
 exports.userSuggestions = async (req, res) => {
@@ -429,7 +428,7 @@ exports.userSuggestions = async (req, res) => {
         const user = await userSchema.findById(userid)
         if (!user || user === null) return res.status(400).json({ message: "You are not logged in" })
         const following = await followSchema.find({ follower: userid })
-        const suggestions = await userSchema.find({$and:[ {_id: { $nin: following } }, {_id: { $ne: userid }} ]})
+        const suggestions = await userSchema.find({ $and: [{ _id: { $nin: following } }, { _id: { $ne: userid } }] })
         //Function to shuffle array
         const shuffle = (array) => {
             var currentIndex = array.length, temporaryValue, randomIndex;
@@ -469,9 +468,26 @@ exports.getFollowersData = async (req, res) => {
         if (!user || user === null) return res.status(400).json({ message: "You are not logged in" })
         const followers = await followSchema.find({ user: userid })
         const users = await userSchema.find({ _id: { $in: followers } })
-        return res.status(200).json({ users })
+        return res.status(200).json({ users, followers })
     } catch (error) {
         console.log(error);
         return res.status(400).json({ message: "Error in getting user suggestions" })
+    }
+}
+exports.getFollowData = async (req, res) => {
+    try {
+        const { userID } = req.params
+        const user = await userSchema.findById(userID)
+        if (!user || user === null) return res.status(400).json({ message: "User not found" })
+
+        const followers = await followSchema.find({ user: userID })
+        const following = await followSchema.find({ follower: userID })
+        const followersIdArray = followers.map(follower => follower.follower)
+        const followingIdArray = following.map(following => following.user)
+        const buttonText = followersIdArray.includes(req.user.userid) ? "Unfollow" : "Follow"
+        return res.status(200).json({ followers, following, followersIdArray,buttonText, followingIdArray })
+    } catch (error) {
+        console.log(error);
+        return res.status(400).json({ message: "Error in getting user follow data" })
     }
 }
