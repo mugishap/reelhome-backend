@@ -1,6 +1,6 @@
 const express = require("express");
 const { registerDefinition } = require("swaggiffy");
-const { registerUser, getUserByQuery, allUsers, updateUser, deleteUser, login, updatePassword, unfollowUser,updateBiography, updateProfilePicture, followPerson, followUser, updateCoverPicture, userSuggestions, getUserById, getFollowingData } = require("../controllers/user");
+const { updateAllProfile, registerUser, getUserByQuery, allUsers, updateUser, deleteUser, login, updatePassword, unfollowUser, updateBiography, updateProfilePicture, followPerson, followUser, updateCoverPicture, userSuggestions, getUserById, getFollowingData } = require("../controllers/user");
 const userRouter = express.Router()
 const { checkForAccess } = require('./../middlewares/auth')
 
@@ -20,6 +20,7 @@ userRouter.get('/suggestedUsers', checkForAccess, userSuggestions)
 userRouter.get('/getUserByID/:id', checkForAccess, getUserById)
 userRouter.get('/getFollowingData', checkForAccess, getFollowingData)
 userRouter.get('/getFollowingData', checkForAccess, getFollowingData)
+userRouter.patch('/updateAllAspects', checkForAccess, updateAllProfile)
 
 registerDefinition(userRouter, { tags: 'Users', mappedSchema: 'User', basePath: '/user' })
 

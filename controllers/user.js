@@ -2,10 +2,9 @@ const { userSchema } = require("../models/user")
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const { followSchema } = require("../models/follows")
-const { isEmail, isURL, isAlphaNum, isAlpha } = require("valdie")
 const { isString, isInteger } = require("lodash")
 const cloudinary = require('cloudinary').v2
-const { signupSchema, loginSchema, updateUserSchema, updatePasswordSchema } = require("./../utils/validate")
+const { signupSchema, updateAllSchema,loginSchema, updateUserSchema, updatePasswordSchema } = require("./../utils/validate")
 
 require('dotenv').config()
 
@@ -142,7 +141,7 @@ exports.updateUser = async (req, res) => {
             username,
             email,
         })
-        return res.status(200).json({ message: "updated successfully" })
+        return res.status(200).json({ message: "User updated successfully" })
     } catch (error) {
         console.log(error.message);
         const message = error.message.match(/(\w+)\sdup key/i)[1]
@@ -392,13 +391,45 @@ exports.updateBiography = async (req, res) => {
     }
 }
 
+
+exports.updateAllProfile = async(req,res)=>{
+    const {cover,profile,fullname,username,email} = req.body
+    const {error,value} =updateAllSchema.validate(req.body)
+    if(error) return res.status(400).json({message:error.message})
+    const user = req.user.userid
+    const userData = await postSchema.findOne({user})
+    if(!userData) return res.status(400).json({message:"User not found"})
+    const coverUploadResponse = await cloudinary.uploader.upload(cover,{
+        resource_type:'image',
+        upload_preset:'reelhome'
+    })
+    const coverURL = coverUploadResponse.secure_url
+    const profileUploadResponse = await cloudinary.uploader.upload(profile,{
+        resource_type:'image',
+        upload_preset:'reelhome'
+    })
+    const profileURL = profileUploadResponse.secure_url
+
+    await cloudinary.uploader.destroy(userData.cover.split('/').pop())
+    await cloudinary.uploader.destroy(userData.profile.split('/').pop())
+
+    await postSchema.findByIdAndUpdate(user,{
+        cover:coverURL,
+        profile:profileURL,
+        fullname,
+        username,
+        email
+    })
+    return res.status(200).json({message:"Profile updated successfully"})
+}
+
 exports.userSuggestions = async (req, res) => {
     try {
         const userid = req.user.userid
         const user = await userSchema.findById(userid)
         if (!user || user === null) return res.status(400).json({ message: "You are not logged in" })
         const following = await followSchema.find({ follower: userid })
-        const suggestions = await userSchema.find({ _id: { $nin: following } })
+        const suggestions = await userSchema.find({$and:[ {_id: { $nin: following } }, {_id: { $ne: userid }} ]})
         //Function to shuffle array
         const shuffle = (array) => {
             var currentIndex = array.length, temporaryValue, randomIndex;

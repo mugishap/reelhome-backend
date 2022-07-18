@@ -14,13 +14,13 @@ exports.loginSchema = Joi.object({
 })
 
 exports.createPostSchema = Joi.object({
-    caption: Joi.string().required(),
-    imageStr: Joi.string().required(),
+    caption: Joi.string().required().max(400),
+    videoStr: Joi.string().required(),
 })
 
 exports.updatePostSchema = Joi.object({
     caption: Joi.string().required(),
-    imageStr: Joi.string().required(),
+    videoStr: Joi.string().required(),
 })
 
 exports.updateUserSchema = Joi.object({
@@ -45,4 +45,11 @@ exports.deleteUserSchema = Joi.object({
 
 exports.updateBiographySchema = Joi.object({
     biography: Joi.string().required().max(300).min(3),
+})
+exports.updateAllSchema = Joi.object({
+    profile:Joi.string().required(),
+    cover:Joi.string().required(),
+    fullname: Joi.string().max(100).min(4).required(),
+    username: Joi.string().required().max(16).min(3),
+    email: Joi.string().email().required(),
 })

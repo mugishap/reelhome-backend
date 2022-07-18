@@ -1,5 +1,6 @@
 const express = require('express')
 const { postSchema } = require('../models/posts')
+const { createPostSchema, updateAllSchema } = require('./../utils/validate')
 const { likeSchema } = require('../models/likes')
 const { commentSchema } = require('../models/comments')
 const cloudinary = require('cloudinary').v2
@@ -13,8 +14,12 @@ cloudinary.config({
 exports.newPost = async (req, res) => {
     try {
         const { videoStr, caption } = req.body
-        user = req.user.userid
-        const uploadedResponse = await cloudinary.uploader.upload(videoStr, {
+        const { error, value } = createPostSchema.validate(req.body)
+        if (error) return res.status(400).json({ message: error.message })
+        const user = req.user.userid
+        const uploadedResponse = await cloudinary.uploader.upload_large(videoStr, {
+            resource_type: "video",
+            timeout:120000,
             upload_preset: 'reelhome'
         })
         const video_url = uploadedResponse.secure_url
@@ -28,7 +33,8 @@ exports.newPost = async (req, res) => {
         if (!post) return res.status(400).json({ message: "POST NOT CREATED", post, posts })
         return res.status(200).json({ message: "Post created succesfully" })
     } catch (error) {
-        console.log(`[LOG]Error: ${error}`);
+        console.log(error);
+        return res.status(500).json({ message: error })
     }
 }
 
@@ -57,13 +63,13 @@ exports.deletePost = async (req, res) => {
         return res.status(200).json({ message: "Post deleted succesfully", likedata, likecount })
 
     } catch (error) {
-
+        console.log(error);
+        return res.status(500).json({ message: error.message })
     }
 }
 
 exports.commentOnPost = async (req, res) => {
     try {
-
 
         const { postID, comment } = req.body
         const user = req.user.userid
@@ -79,12 +85,12 @@ exports.commentOnPost = async (req, res) => {
         await postSchema.findByIdAndUpdate(postID, { $inc: { comments: 1 } })
         return res.status(200).json({ message: "Comment created succesfully", comments })
     } catch (error) {
-
+        console.log(error);
+        return res.status(500).json({ message: error.message })
     }
 }
 exports.likePost = async (req, res) => {
     try {
-
 
         const { postID } = req.params
         const user = req.user.userid
@@ -102,71 +108,69 @@ exports.likePost = async (req, res) => {
         const likecount = likedata.length
         return res.status(200).json({ message: "Like created succesfully", likedata, likecount })
     } catch (error) {
-
+        console.log(error);
+        return res.status(500).json({ message: error.message })
     }
 }
 exports.getPostByPosterID = async (req, res) => {
     try {
-
-
         const { posterID } = req.params
         const posts = await postSchema.find({ user: posterID })
         if (!posts || posts === null) return res.status(400).json({ message: "No posts found" })
+        return res.status(200).json({ message: "Posts fetched successfully", posts })
     } catch (error) {
-
+        console.log(error);
+        return res.status(500).json({ message: error.message })
     }
-    return res.status(200).json({ posts })
 }
 exports.getPostsByMostLikes = async (req, res) => {
     try {
-
-
         const posts = await postSchema.find().sort({ likes: desc })
         if (!posts || posts === null) return res.status(400).json({ message: "No posts found" })
         return res.status(200).json({ posts })
     } catch (error) {
-
+        console.log(error);
+        return res.status(500).json({ message: error.message })
     }
 }
 exports.getPostsByMostComments = async (req, res) => {
     try {
 
-
         const posts = await postSchema.find().sort({ comments: desc })
         if (!posts || posts === null) return res.status(400).json({ message: "No posts found" })
 
+        return res.status(200).json({ posts })
     } catch (error) {
-
+        console.log(error);
+        return res.status(500).json({ message: error.message })
     }
-    return res.status(200).json({ posts })
 }
 exports.getCommentsByPosts = async (req, res) => {
     try {
-
 
         const { postID } = req.params
         const comments = await commentSchema.find({ post: postID })
         if (!comments || comments === null) return res.status(400).json({ message: "No comments found" })
         return res.status(200).json({ comments })
     } catch (error) {
-
+        console.log(error);
+        return res.status(500).json({ message: error.message })
     }
 }
 exports.getLikesDataByPosts = async (req, res) => {
     try {
-
 
         const { postID } = req.params
         const likedata = await likeSchema.find({ post: postID })
         if (!likedata || likedata === null) return res.status(400).json({ message: "No likes found" })
         return res.status(200).json({ likedata })
     } catch (error) {
-
+        console.log(error);
+        return res.status(500).json({ message: error.message })
     }
 }
 exports.getLikesCountByPosts = async (req, res) => {
     try {
-
 
         const { postID } = req.params
         const likedata = await likeSchema.find({ post: postID })
@@ -174,7 +178,8 @@ exports.getLikesCountByPosts = async (req, res) => {
         const likecount = likedata.length
         return res.status(200).json({ likedata, likecount })
     } catch (error) {
-
+        console.log(error);
+        return res.status(500).json({ message: error.message })
     }
 }
 exports.getCommentsByUser = async (req, res) => {
@@ -186,12 +191,12 @@ exports.getCommentsByUser = async (req, res) => {
         return res.status(200).json({ comments })
 
     } catch (error) {
-
+        console.log(error);
+        return res.status(500).json({ message: error.message })
     }
 }
 exports.unLikePost = async (req, res) => {
     try {
-
 
         const { postID } = req.params
         const user = req.user.userid
@@ -205,12 +210,12 @@ exports.unLikePost = async (req, res) => {
         const likecount = likedata.length
         return res.status(200).json({ message: "Like deleted succesfully", likedata, likecount })
     } catch (error) {
-
+        console.log(error);
+        return res.status(500).json({ message: error.message })
     }
 }
 exports.updateCommentOnPost = async (req, res) => {
     try {
-
 
         const { postID } = req.params
         const { commentID, comment } = req.body
@@ -223,12 +228,12 @@ exports.updateCommentOnPost = async (req, res) => {
         const comments = await commentSchema.find({ post: postID })
         return res.status(200).json({ message: "Comment updated succesfully", comments })
     } catch (error) {
-
+        console.log(error);
+        return res.status(500).json({ message: error.message })
     }
 }
 exports.updatePost = async (req, res) => {
     try {
-
 
         const { postID } = req.params
         const { caption, videoStr } = req.body
@@ -249,12 +254,12 @@ exports.updatePost = async (req, res) => {
         const posts = await postSchema.find()
         return res.status(200).json({ message: "Post updated succesfully", posts })
     } catch (error) {
-
+        console.log(error);
+        return res.status(500).json({ message: error.message })
     }
 }
 exports.getPostsByFollowing = async (req, res) => {
     try {
-
 
         const userID = req.user.userid
         const following = await followSchema.find({ follower: userID })
@@ -263,12 +268,12 @@ exports.getPostsByFollowing = async (req, res) => {
         if (!posts || posts === null) return res.status(400).json({ message: "No posts found from the people you follow" })
         return res.status(200).json({ posts })
     } catch (error) {
-
+        console.log(error);
+        return res.status(500).json({ message: error.message })
     }
 }
 exports.getAllPostData = async (req, res) => {
     try {
-
 
         const { postID } = req.params
         const post = await postSchema.findById(postID)
@@ -279,7 +284,8 @@ exports.getAllPostData = async (req, res) => {
         if (!likes || likes === null) return res.status(400).json({ message: "No likes found" })
         return res.status(200).json({ post, comments, likes })
     } catch (error) {
-
+        console.log(error);
+        return res.status(500).json({ message: error.message })
     }
 }
 exports.deleteComment = async (req, res) => {
@@ -297,6 +303,7 @@ exports.deleteComment = async (req, res) => {
         const comments = await commentSchema.find({ post: comment.post })
         return res.status(200).json({ message: "Comment deleted succesfully", comments })
     } catch (error) {
-
+        console.log(error);
+        return res.status(500).json({ message: error.message })
     }
 }
